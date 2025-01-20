@@ -7,7 +7,7 @@
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            max-width: 600px;
+            max-width: 800px;
             margin: 20px auto;
             padding: 20px;
             background-color: #f0f2f5;
@@ -18,9 +18,10 @@
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
         }
 
-        h1 {
+        h1, h2 {
             color: #1a73e8;
             font-size: 24px;
             margin-bottom: 20px;
@@ -68,6 +69,40 @@
             animation: fadeIn 0.5s;
         }
 
+        .schedule-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .schedule-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #1a73e8;
+        }
+
+        .schedule-card h3 {
+            margin: 0 0 10px 0;
+            color: #1a73e8;
+        }
+
+        .toggle-schedule {
+            background: #1a73e8;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px auto;
+            display: block;
+        }
+
+        .toggle-schedule:hover {
+            background: #1557b0;
+        }
+
         @keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
@@ -80,16 +115,26 @@
         <div class="books-list" id="booksList"></div>
         <div class="time" id="currentTime"></div>
         <div class="notification">Pengingat akan muncul setiap jam 6:58 pagi</div>
+        <button class="toggle-schedule" onclick="toggleSchedule()">Lihat Semua Jadwal</button>
     </div>
+
+    <div class="container" id="fullSchedule" style="display: none;">
+        <h2>Jadwal Lengkap</h2>
+        <div class="schedule-grid">
+            <!-- Schedule cards will be inserted here -->
+        </div>
+    </div>
+
     <div id="alert" class="alert">Waktunya siapkan buku untuk hari ini!</div>
 
     <script>
         const scheduleData = {
-            'SENIN': ['AGAMA', 'PANCASILA', 'PANCASILA', 'B.INDONESIA', 'B.INDONESIA', 'B.INDONESIA'],
-            'SELASA': ['B.INGGRIS', 'B.INGGRIS', 'MATEMATIKA', 'MATEMATIKA', 'B.INDONESIA', 'B.INDONESIA'],
-            'RABU': ['IPA', 'IPA', 'IPA', 'IPS', 'PRAKARYA', 'PRAKARYA'],
-            'KAMIS': ['PENJAS', 'PENJAS', 'PENJAS', 'PENJAS', 'B.LAMPUNG', 'IPS'],
-            'JUMAT': ['INFORMATIKA', 'INFORMATIKA', 'INFORMATIKA']
+            'SENIN': ['BAHASA LAMPUNG', 'BAHASA INDONESIA'],
+            'SELASA': ['PRAKARYA', 'INFORMATIKA', 'BAHASA INDONESIA'],
+            'RABU': ['IPS', 'PEND. PANCASILA', 'MATEMATIKA'],
+            'KAMIS': ['IPA', 'BAHASA INGGRIS', 'PEND. PANCASILA'],
+            'JUMAT': ['BAHASA INGGRIS', 'AGAMA ISLAM'],
+            'SABTU': ['PENJAS', 'MATEMATIKA']
         };
 
         function getCurrentDay() {
@@ -107,9 +152,7 @@
                 return;
             }
 
-            // Remove duplicates and sort
-            const uniqueBooks = [...new Set(books)];
-            booksListDiv.innerHTML = uniqueBooks
+            booksListDiv.innerHTML = books
                 .map(book => `<div class="book-item">📚 ${book}</div>`)
                 .join('');
         }
@@ -126,9 +169,7 @@
             const now = new Date();
             document.getElementById('currentTime').textContent = now.toLocaleTimeString('id-ID');
 
-            // Check for reminder time (6:58 AM)
             if (now.getHours() === 6 && now.getMinutes() === 58) {
-                // Try to use Notification API if available
                 if (typeof Notification !== 'undefined') {
                     if (Notification.permission === 'granted') {
                         new Notification('Pengingat Buku Pelajaran', {
@@ -137,24 +178,48 @@
                         });
                     }
                 }
-                // Fallback to custom alert
                 showAlert();
             }
         }
 
-        // Request notification permission only if supported
+        function createFullSchedule() {
+            const scheduleGrid = document.querySelector('.schedule-grid');
+            scheduleGrid.innerHTML = '';
+            
+            Object.entries(scheduleData).forEach(([day, subjects]) => {
+                const card = document.createElement('div');
+                card.className = 'schedule-card';
+                card.innerHTML = `
+                    <h3>${day}</h3>
+                    ${subjects.map(subject => `<div class="book-item">📚 ${subject}</div>`).join('')}
+                `;
+                scheduleGrid.appendChild(card);
+            });
+        }
+
+        function toggleSchedule() {
+            const scheduleDiv = document.getElementById('fullSchedule');
+            const button = document.querySelector('.toggle-schedule');
+            if (scheduleDiv.style.display === 'none') {
+                scheduleDiv.style.display = 'block';
+                button.textContent = 'Sembunyikan Jadwal';
+                createFullSchedule();
+            } else {
+                scheduleDiv.style.display = 'none';
+                button.textContent = 'Lihat Semua Jadwal';
+            }
+        }
+
         if (typeof Notification !== 'undefined') {
             if (Notification.permission !== 'granted') {
                 Notification.requestPermission();
             }
         }
 
-        // Update immediately and then every minute
         updateBooks();
         updateTime();
         setInterval(updateTime, 60000);
 
-        // Check for new day every minute
         setInterval(() => {
             const now = new Date();
             if (now.getHours() === 0 && now.getMinutes() === 0) {
@@ -163,4 +228,4 @@
         }, 60000);
     </script>
 </body>
-  </html>
+</html>
