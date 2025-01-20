@@ -3,12 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <!-- Basic favicon implementation -->
-    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
-    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <!-- Clear browser cache with version parameter -->
+    <link rel="shortcut icon" href="/favicon.ico?v=2" type="image/x-icon">
+    <link rel="icon" href="/favicon.ico?v=2" type="image/x-icon">
     
-    <title>Pengingat Buku Pelajaran</title>
+  <title>Pengingat Buku Pelajaran</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -133,6 +135,21 @@
     <div id="alert" class="alert">Waktunya siapkan buku untuk hari ini!</div>
 
     <script>
+      function refreshFavicon() {
+            // Remove existing favicons
+            var links = document.querySelectorAll('link[rel*="icon"]');
+            links.forEach(link => link.remove());
+            
+            // Add new favicon with timestamp
+            var link = document.createElement('link');
+            link.type = 'image/x-icon';
+            link.rel = 'shortcut icon';
+            link.href = '/favicon.ico?' + new Date().getTime();
+            document.getElementsByTagName('head')[0].appendChild(link);
+        }
+        
+        // Call on page load
+        window.onload = refreshFavicon;
         const scheduleData = {
             'SENIN': ['BAHASA LAMPUNG', 'BAHASA INDONESIA'],
             'SELASA': ['PRAKARYA', 'INFORMATIKA', 'BAHASA INDONESIA'],
