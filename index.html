@@ -1,1 +1,166 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pengingat Buku Pelajaran</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f0f2f5;
+        }
 
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #1a73e8;
+            font-size: 24px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .books-list {
+            margin-top: 20px;
+        }
+
+        .book-item {
+            padding: 10px;
+            margin: 5px 0;
+            background: #f8f9fa;
+            border-left: 4px solid #1a73e8;
+            border-radius: 4px;
+        }
+
+        .time {
+            color: #666;
+            font-size: 14px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .notification {
+            margin-top: 20px;
+            padding: 10px;
+            background: #e3f2fd;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .alert {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 15px;
+            background: #4CAF50;
+            color: white;
+            border-radius: 4px;
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Buku yang harus dibawa hari ini</h1>
+        <div class="books-list" id="booksList"></div>
+        <div class="time" id="currentTime"></div>
+        <div class="notification">Pengingat akan muncul setiap jam 6:58 pagi</div>
+    </div>
+    <div id="alert" class="alert">Waktunya siapkan buku untuk hari ini!</div>
+
+    <script>
+        const scheduleData = {
+            'SENIN': ['AGAMA', 'PANCASILA', 'PANCASILA', 'B.INDONESIA', 'B.INDONESIA', 'B.INDONESIA'],
+            'SELASA': ['B.INGGRIS', 'B.INGGRIS', 'MATEMATIKA', 'MATEMATIKA', 'B.INDONESIA', 'B.INDONESIA'],
+            'RABU': ['IPA', 'IPA', 'IPA', 'IPS', 'PRAKARYA', 'PRAKARYA'],
+            'KAMIS': ['PENJAS', 'PENJAS', 'PENJAS', 'PENJAS', 'B.LAMPUNG', 'IPS'],
+            'JUMAT': ['INFORMATIKA', 'INFORMATIKA', 'INFORMATIKA']
+        };
+
+        function getCurrentDay() {
+            const days = ['MINGGU', 'SENIN', 'SELASA', 'RABU', 'KAMIS', 'JUMAT', 'SABTU'];
+            return days[new Date().getDay()];
+        }
+
+        function updateBooks() {
+            const currentDay = getCurrentDay();
+            const books = scheduleData[currentDay];
+            const booksListDiv = document.getElementById('booksList');
+            
+            if (!books) {
+                booksListDiv.innerHTML = '<div class="book-item">Tidak ada jadwal hari ini</div>';
+                return;
+            }
+
+            // Remove duplicates and sort
+            const uniqueBooks = [...new Set(books)];
+            booksListDiv.innerHTML = uniqueBooks
+                .map(book => `<div class="book-item">📚 ${book}</div>`)
+                .join('');
+        }
+
+        function showAlert() {
+            const alert = document.getElementById('alert');
+            alert.style.display = 'block';
+            setTimeout(() => {
+                alert.style.display = 'none';
+            }, 5000);
+        }
+
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('currentTime').textContent = now.toLocaleTimeString('id-ID');
+
+            // Check for reminder time (6:58 AM)
+            if (now.getHours() === 6 && now.getMinutes() === 58) {
+                // Try to use Notification API if available
+                if (typeof Notification !== 'undefined') {
+                    if (Notification.permission === 'granted') {
+                        new Notification('Pengingat Buku Pelajaran', {
+                            body: 'Waktunya siapkan buku untuk hari ini!',
+                            icon: '/api/placeholder/48/48'
+                        });
+                    }
+                }
+                // Fallback to custom alert
+                showAlert();
+            }
+        }
+
+        // Request notification permission only if supported
+        if (typeof Notification !== 'undefined') {
+            if (Notification.permission !== 'granted') {
+                Notification.requestPermission();
+            }
+        }
+
+        // Update immediately and then every minute
+        updateBooks();
+        updateTime();
+        setInterval(updateTime, 60000);
+
+        // Check for new day every minute
+        setInterval(() => {
+            const now = new Date();
+            if (now.getHours() === 0 && now.getMinutes() === 0) {
+                updateBooks();
+            }
+        }, 60000);
+    </script>
+</body>
+  </html>
