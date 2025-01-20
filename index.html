@@ -1,14 +1,25 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <meta charset="UTF-8">
+  <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <!-- Clear browser cache with version parameter -->
-    <link rel="shortcut icon" href="/favicon.ico?v=2" type="image/x-icon">
-    <link rel="icon" href="/favicon.ico?v=2" type="image/x-icon">
+    <!-- Standard favicon -->
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    
+    <!-- Favicon for bookmarks -->
+    <link rel="bookmark icon" href="/favicon.ico" type="image/x-icon">
+    
+    <!-- iOS icon -->
+    <link rel="apple-touch-icon" href="/favicon.ico">
+    
+    <!-- Windows tile -->
+    <meta name="msapplication-TileImage" content="/favicon.ico">
+    <meta name="msapplication-TileColor" content="#ffffff">
+    
+    <!-- Browser specific meta -->
+    <meta name="theme-color" content="#ffffff">
     
   <title>Pengingat Buku Pelajaran</title>
     <style>
@@ -135,21 +146,29 @@
     <div id="alert" class="alert">Waktunya siapkan buku untuk hari ini!</div>
 
     <script>
-      function refreshFavicon() {
-            // Remove existing favicons
-            var links = document.querySelectorAll('link[rel*="icon"]');
-            links.forEach(link => link.remove());
+function updateFavicon() {
+            // Force refresh all favicon instances
+            const timestamp = new Date().getTime();
+            const links = document.querySelectorAll('link[rel*="icon"], link[rel="bookmark icon"], link[rel="apple-touch-icon"]');
             
-            // Add new favicon with timestamp
-            var link = document.createElement('link');
-            link.type = 'image/x-icon';
-            link.rel = 'shortcut icon';
-            link.href = '/favicon.ico?' + new Date().getTime();
-            document.getElementsByTagName('head')[0].appendChild(link);
+            links.forEach(link => {
+                const originalHref = link.href.split('?')[0];
+                link.href = `${originalHref}?v=${timestamp}`;
+            });
+            
+            // Update Windows tile
+            const msTitle = document.querySelector('meta[name="msapplication-TileImage"]');
+            if (msTitle) {
+                msTitle.content = `/favicon.ico?v=${timestamp}`;
+            }
         }
+
+        // Update on page load
+        window.addEventListener('load', updateFavicon);
         
-        // Call on page load
-        window.onload = refreshFavicon;
+        // Optional: Update periodically
+        setInterval(updateFavicon, 1000); // Check every second
+  
         const scheduleData = {
             'SENIN': ['BAHASA LAMPUNG', 'BAHASA INDONESIA'],
             'SELASA': ['PRAKARYA', 'INFORMATIKA', 'BAHASA INDONESIA'],
