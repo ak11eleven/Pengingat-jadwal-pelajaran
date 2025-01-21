@@ -1,28 +1,21 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <!-- Standard favicon -->
+    <!-- Favicons remain the same -->
     <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
-    
-    <!-- Favicon for bookmarks -->
     <link rel="bookmark icon" href="/favicon.ico" type="image/x-icon">
-    
-    <!-- iOS icon -->
     <link rel="apple-touch-icon" href="/favicon.ico">
-    
-    <!-- Windows tile -->
     <meta name="msapplication-TileImage" content="/favicon.ico">
     <meta name="msapplication-TileColor" content="#ffffff">
-    
-    <!-- Browser specific meta -->
     <meta name="theme-color" content="#ffffff">
     
-  <title>Pengingat Buku Pelajaran</title>
+    <title>Pengingat Buku Pelajaran</title>
     <style>
+        /* Previous styles remain the same */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             max-width: 800px;
@@ -46,6 +39,14 @@
             text-align: center;
         }
 
+        .day-header {
+            color: #1a73e8;
+            font-size: 18px;
+            margin: 15px 0 10px 0;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #e3f2fd;
+        }
+
         .books-list {
             margin-top: 20px;
         }
@@ -60,11 +61,20 @@
 
         .time {
             color: #666;
-            font-size: 14px;
+            font-size: 18px;
             margin-top: 20px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .date {
+            color: #1a73e8;
+            font-size: 16px;
+            margin-top: 10px;
             text-align: center;
         }
 
+        /* Previous styles continue... */
         .notification {
             margin-top: 20px;
             padding: 10px;
@@ -101,11 +111,6 @@
             border-left: 4px solid #1a73e8;
         }
 
-        .schedule-card h3 {
-            margin: 0 0 10px 0;
-            color: #1a73e8;
-        }
-
         .toggle-schedule {
             background: #1a73e8;
             color: white;
@@ -117,10 +122,6 @@
             display: block;
         }
 
-        .toggle-schedule:hover {
-            background: #1557b0;
-        }
-
         @keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
@@ -129,9 +130,16 @@
 </head>
 <body>
     <div class="container">
-        <h1>Buku yang harus dibawa hari ini</h1>
-        <div class="books-list" id="booksList"></div>
+        <h1>Jadwal Pelajaran</h1>
         <div class="time" id="currentTime"></div>
+        <div class="date" id="currentDate"></div>
+        
+        <div class="day-header">Hari Ini:</div>
+        <div class="books-list" id="todayBooks"></div>
+        
+        <div class="day-header">Besok:</div>
+        <div class="books-list" id="tomorrowBooks"></div>
+        
         <div class="notification">Pengingat akan muncul setiap jam 6:58 pagi</div>
         <button class="toggle-schedule" onclick="toggleSchedule()">Lihat Semua Jadwal</button>
     </div>
@@ -146,36 +154,14 @@
     <div id="alert" class="alert">Waktunya siapkan buku untuk hari ini!</div>
 
     <script>
-function updateFavicon() {
-            // Force refresh all favicon instances
-            const timestamp = new Date().getTime();
-            const links = document.querySelectorAll('link[rel*="icon"], link[rel="bookmark icon"], link[rel="apple-touch-icon"]');
-            
-            links.forEach(link => {
-                const originalHref = link.href.split('?')[0];
-                link.href = `${originalHref}?v=${timestamp}`;
-            });
-            
-            // Update Windows tile
-            const msTitle = document.querySelector('meta[name="msapplication-TileImage"]');
-            if (msTitle) {
-                msTitle.content = `/favicon.ico?v=${timestamp}`;
-            }
-        }
-
-        // Update on page load
-        window.addEventListener('load', updateFavicon);
-        
-        // Optional: Update periodically
-        setInterval(updateFavicon, 1000); // Check every second
-  
         const scheduleData = {
             'SENIN': ['BAHASA LAMPUNG', 'BAHASA INDONESIA'],
             'SELASA': ['PRAKARYA', 'INFORMATIKA', 'BAHASA INDONESIA'],
             'RABU': ['IPS', 'PEND. PANCASILA', 'MATEMATIKA'],
             'KAMIS': ['IPA', 'BAHASA INGGRIS', 'PEND. PANCASILA'],
             'JUMAT': ['BAHASA INGGRIS', 'AGAMA ISLAM'],
-            'SABTU': ['PENJAS', 'MATEMATIKA']
+            'SABTU': ['PENJAS', 'MATEMATIKA'],
+            'MINGGU': []
         };
 
         function getCurrentDay() {
@@ -183,19 +169,52 @@ function updateFavicon() {
             return days[new Date().getDay()];
         }
 
-        function updateBooks() {
-            const currentDay = getCurrentDay();
-            const books = scheduleData[currentDay];
-            const booksListDiv = document.getElementById('booksList');
-            
-            if (!books) {
-                booksListDiv.innerHTML = '<div class="book-item">Tidak ada jadwal hari ini</div>';
-                return;
-            }
+        function getTomorrowDay() {
+            const days = ['MINGGU', 'SENIN', 'SELASA', 'RABU', 'KAMIS', 'JUMAT', 'SABTU'];
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            return days[tomorrow.getDay()];
+        }
 
-            booksListDiv.innerHTML = books
+        function formatBooks(books, day) {
+            if (!books || books.length === 0) {
+                return `<div class="book-item">Tidak ada jadwal di hari ${day}</div>`;
+            }
+            return books
                 .map(book => `<div class="book-item">📚 ${book}</div>`)
                 .join('');
+        }
+
+        function updateScheduleDisplay() {
+            const currentDay = getCurrentDay();
+            const tomorrowDay = getTomorrowDay();
+            
+            document.getElementById('todayBooks').innerHTML = formatBooks(scheduleData[currentDay], currentDay);
+            document.getElementById('tomorrowBooks').innerHTML = formatBooks(scheduleData[tomorrowDay], tomorrowDay);
+        }
+
+        function updateDateTime() {
+            const now = new Date();
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            };
+            
+            document.getElementById('currentTime').textContent = now.toLocaleTimeString('id-ID');
+            document.getElementById('currentDate').textContent = now.toLocaleDateString('id-ID', options);
+
+            // Check for notification time
+            if (now.getHours() === 6 && now.getMinutes() === 58) {
+                if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+                    new Notification('Pengingat Buku Pelajaran', {
+                        body: 'Waktunya siapkan buku untuk hari ini!',
+                        icon: '/api/placeholder/48/48'
+                    });
+                }
+                showAlert();
+            }
         }
 
         function showAlert() {
@@ -206,35 +225,20 @@ function updateFavicon() {
             }, 5000);
         }
 
-        function updateTime() {
-            const now = new Date();
-            document.getElementById('currentTime').textContent = now.toLocaleTimeString('id-ID');
-
-            if (now.getHours() === 6 && now.getMinutes() === 58) {
-                if (typeof Notification !== 'undefined') {
-                    if (Notification.permission === 'granted') {
-                        new Notification('Pengingat Buku Pelajaran', {
-                            body: 'Waktunya siapkan buku untuk hari ini!',
-                            icon: '/api/placeholder/48/48'
-                        });
-                    }
-                }
-                showAlert();
-            }
-        }
-
         function createFullSchedule() {
             const scheduleGrid = document.querySelector('.schedule-grid');
             scheduleGrid.innerHTML = '';
             
             Object.entries(scheduleData).forEach(([day, subjects]) => {
-                const card = document.createElement('div');
-                card.className = 'schedule-card';
-                card.innerHTML = `
-                    <h3>${day}</h3>
-                    ${subjects.map(subject => `<div class="book-item">📚 ${subject}</div>`).join('')}
-                `;
-                scheduleGrid.appendChild(card);
+                if (subjects.length > 0) { // Only show days with schedules
+                    const card = document.createElement('div');
+                    card.className = 'schedule-card';
+                    card.innerHTML = `
+                        <h3>${day}</h3>
+                        ${formatBooks(subjects, day)}
+                    `;
+                    scheduleGrid.appendChild(card);
+                }
             });
         }
 
@@ -251,20 +255,25 @@ function updateFavicon() {
             }
         }
 
+        // Initialize notifications
         if (typeof Notification !== 'undefined') {
             if (Notification.permission !== 'granted') {
                 Notification.requestPermission();
             }
         }
 
-        updateBooks();
-        updateTime();
-        setInterval(updateTime, 60000);
+        // Initial updates
+        updateDateTime();
+        updateScheduleDisplay();
 
+        // Update time every second
+        setInterval(updateDateTime, 1000);
+
+        // Check for day change every minute
         setInterval(() => {
             const now = new Date();
             if (now.getHours() === 0 && now.getMinutes() === 0) {
-                updateBooks();
+                updateScheduleDisplay();
             }
         }, 60000);
     </script>
